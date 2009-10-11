@@ -1,0 +1,13 @@
+# use glob syntax.
+syntax: glob
+
+# "sbt creates and uses several directories that you will normally
+#  want to exclude from version control:"
+#   -- http://code.google.com/p/simple-build-tool/wiki/Setup
+target/
+lib_managed/
+project/boot/
+project/build/target/
+project/plugins/target/
+project/plugins/lib_managed/
+project/plugins/src_managed/
