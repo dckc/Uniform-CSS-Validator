@@ -1,0 +1,24 @@
+Uniform CSS Validator
+=====================
+
+CSS syntax evolves in a backward- and forward-compatible way; the CSS
+2.1 spec includes a unform grammar, applicable to all CSS versions.
+The original (2002) W3C CSS validator predates this unform grammar and
+maintenance is becoming an undue burden as a result. This is
+an attempt to build a validator using the uniform syntax.
+
+So far, it's just an exercise in learning scala development.  It
+consists of one failing test.
+
+
+Emacs and Scala
+---------------
+
+scala-mode in 2.7.6-final sorta works, though it doesn't
+seem to recover after parsing /*...*/ style comments.
+
+Haven't gotten sbt working with emacs yet.
+
+http://code.google.com/p/simple-build-tool/wiki/IntegrationSupport
+scallap / tools / emacs / sbt.el 
+commit  000e748597d9b73e2da026029afc4ca9248aa936
