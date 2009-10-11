@@ -1,3 +1,4 @@
+=====================
 Uniform CSS Validator
 =====================
 
@@ -7,8 +8,114 @@ The original (2002) W3C CSS validator predates this unform grammar and
 maintenance is becoming an undue burden as a result. This is
 an attempt to build a validator using the uniform syntax.
 
+The directory layout follows sbt/maven conventions:
+
+  src/
+    main/
+      resources/
+         <files to include in main jar here>
+      scala/
+         <main Scala sources>
+      java/
+         <main Java sources>
+    test/
+      resources
+         <files to include in test jar here>
+      scala/
+         <test Scala sources>
+      java/
+         <test Java sources>
+
+  -- http://code.google.com/p/simple-build-tool/wiki/Setup
+
 So far, it's just an exercise in learning scala development.  It
-consists of one failing test.
+consists of one failing test::
+
+cssval$ sbt test
+[info] Building project cssval 1.0 using sbt.DefaultProject
+[info]    with sbt 0.5.5 and Scala 2.7.6
+[info] 
+[info] == compile ==
+[info]   Source analysis: 1 new/modified, 0 indirectly invalidated, 0 removed.
+[info] Compiling main sources...
+[info] Compilation successful.
+[info]   Post-analysis: 2 classes.
+[info] == compile ==
+[info] 
+[info] == test-compile ==
+[info]   Source analysis: 1 new/modified, 0 indirectly invalidated, 0 removed.
+[info] Compiling test sources...
+[info] Compilation successful.
+[info]   Post-analysis: 3 classes.
+[info] == test-compile ==
+[info] 
+[info] == copy-test-resources ==
+[info] == copy-test-resources ==
+[info] 
+[info] == copy-resources ==
+[info] == copy-resources ==
+[info] 
+[info] == test-start ==
+[info] == test-start ==
+[info] 
+[info] == org.w3.cssval.CSSSyntaxSpec ==
+[info]  - CSSSyntaxSpec: CSS Syntax Oracle: CSS Syntax Oracle
+[info] Test starting - CSSSyntaxSpec: CSS Syntax Oracle should handle a basic bit of CSS syntax
+org.scalatest.TestFailedException: false did not equal true
+	at org.scalatest.matchers.Helper$.newTestFailedException(Matchers.scala:38)
+	at org.scalatest.matchers.ShouldMatchers$ShouldMethodHelper$.shouldMatcher(ShouldMatchers.scala:825)
+	at org.scalatest.matchers.ShouldMatchers$AnyShouldWrapper.should(ShouldMatchers.scala:853)
+	at org.w3.cssval.CSSSyntaxSpec$$anonfun$1$$anonfun$apply$1.apply(css1.scala:14)
+	at org.w3.cssval.CSSSyntaxSpec$$anonfun$1$$anonfun$apply$1.apply(css1.scala:9)
+	at org.scalatest.Spec$class.runTest(Spec.scala:748)
+	at org.w3.cssval.CSSSyntaxSpec.runTest(css1.scala:6)
+	at org.scalatest.Spec$$anonfun$org$scalatest$Spec$$runTestsInBranch$1.apply(Spec.scala:694)
+	at org.scalatest.Spec$$anonfun$org$scalatest$Spec$$runTestsInBranch$1.apply(Spec.scala:678)
+	at scala.List.foreach(List.scala:841)
+	at org.scalatest.Spec$class.org$scalatest$Spec$$runTestsInBranch(Spec.scala:677)
+	at org.scalatest.Spec$$anonfun$org$scalatest$Spec$$runTestsInBranch$1.apply(Spec.scala:698)
+	at org.scalatest.Spec$$anonfun$org$scalatest$Spec$$runTestsInBranch$1.apply(Spec.scala:678)
+	at scala.List.foreach(List.scala:841)
+	at org.scalatest.Spec$class.org$scalatest$Spec$$runTestsInBranch(Spec.scala:677)
+	at org.scalatest.Spec$class.runTests(Spec.scala:865)
+	at org.w3.cssval.CSSSyntaxSpec.runTests(css1.scala:6)
+	at org.scalatest.Suite$class.execute(Suite.scala:1372)
+	at org.w3.cssval.CSSSyntaxSpec.execute(css1.scala:6)
+	at sbt.impl.ScalaTestRunner.runTest(TestFrameworkImpl.scala:48)
+	at sbt.BasicTestRunner.run(TestFramework.scala:38)
+	at sbt.TestFramework$$anonfun$7$$anonfun$apply$8.runTest$1(TestFramework.scala:136)
+	at sbt.TestFramework$$anonfun$7$$anonfun$apply$8$$anonfun$apply$9.apply(TestFramework.scala:147)
+	at sbt.TestFramework$$anonfun$7$$anonfun$apply$8$$anonfun$apply$9.apply(TestFramework.scala:147)
+	at sbt.NamedTestTask.run(TestFramework.scala:57)
+	at sbt.ScalaProject$$anonfun$sbt$ScalaProject$$toTask$1.apply(ScalaProject.scala:169)
+	at sbt.ScalaProject$$anonfun$sbt$ScalaProject$$toTask$1.apply(ScalaProject.scala:169)
+	at sbt.TaskManager$Task.invoke(TaskManager.scala:62)
+	at sbt.impl.RunTask.doRun$1(RunTask.scala:75)
+	at sbt.impl.RunTask.runTask(RunTask.scala:83)
+	at sbt.impl.RunTask.sbt$impl$RunTask$$runIfNotRoot(RunTask.scala:60)
+	at sbt.impl.RunTask$$anonfun$runTasksExceptRoot$2.apply(RunTask.scala:48)
+	at sbt.impl.RunTask$$anonfun$runTasksExceptRoot$2.apply(RunTask.scala:48)
+	at sbt.Distributor$Run$Worker$$anonfun$2.apply(ParallelRunner.scala:130)
+	at sbt.Distributor$Run$Worker$$anonfun$2.apply(ParallelRunner.scala:130)
+	at sbt.Control$.trapUnit(Control.scala:19)
+	at sbt.Distributor$Run$Worker.run(ParallelRunner.scala:130)
+[error] Test failed - CSSSyntaxSpec: CSS Syntax Oracle should handle a basic bit of CSS syntax: false did not equal true
+[info] == org.w3.cssval.CSSSyntaxSpec ==
+[info] 
+[info] == test-finish ==
+[info] Run: 1, Passed: 0, Errors: 0, Failed: 1
+[info] == test-finish ==
+[info] 
+[info] == test-cleanup ==
+[info] == test-cleanup ==
+[error] Error running org.w3.cssval.CSSSyntaxSpec: Test FAILED
+[error] Error running test: One or more subtasks failed
+[info] 
+[info] Total time: 7 s
+[error] Error during build.
+[info] 
+[info] Total build time: 8 s
+
 
 
 Emacs and Scala
