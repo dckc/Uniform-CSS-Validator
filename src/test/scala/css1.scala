@@ -10,8 +10,10 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
       val testdata = """
       blockquote { text-align: right }
       """
+      val css = new CSSCore;
 
-      cssOracle.check(testdata) should equal (true)
+      (css.parseAll(css.stylesheet, testdata)
+       should equal (true)) //@@
     }
   }
 }
