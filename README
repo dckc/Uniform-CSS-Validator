@@ -117,9 +117,37 @@ org.scalatest.TestFailedException: false did not equal true
 [info] Total build time: 8 s
 
 
+Scala
+-----
+
+82934acf64d0c026de78b84e984f6743  scala-2.7.6.final.tgz
+
+Simple Build Tool
+*****************
+
+MD5 (sbt-launcher-0.5.5.jar) = e3593448b3be17ce1666c6241b8d2f90
+
+hmm... seems to grab the scala compiler...
+
+Scala Test
+**********
+
+http://www.scalatest.org/download
+MD5 (scalatest-1.0.zip) = d41d8cd98f00b204e9800998ecf8427e
+
+unpack; put scala-test-1.0.jar in lib
+
+(todo: use http://code.google.com/p/simple-build-tool/wiki/LibraryManagement )
 
 Emacs and Scala
 ---------------
+
+;;;
+; http://www.scala-lang.org/downloads
+(add-to-list 'load-path "/home/connolly/src/scala-2.7.6.final/misc/scala-tool-support/emacs")
+(add-to-list 'exec-path "/home/connolly/src/scala-2.7.6.final/bin")
+(add-to-list 'exec-path "/home/connolly/bin")
+(require 'scala-mode-auto)
 
 scala-mode in 2.7.6-final sorta works, though it doesn't
 seem to recover after parsing /*...*/ style comments.
