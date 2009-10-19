@@ -4,9 +4,33 @@
 // Share and enjoy.
 
 
+// References:
+// Cascading Style Sheets Level 2 Revision 1 (CSS 2.1) Specification
+// W3C Candidate Recommendation 08 September 2009
+//    http://www.w3.org/TR/2009/CR-CSS2-20090908 
+// esp section 4 Syntax and basic data types
+// http://www.w3.org/TR/CSS2/syndata.html
+
 package org.w3.cssval
 
 import scala.util.parsing.combinator.{Parsers, RegexParsers}
+
+abstract class Macros {
+  // see book section 24.7 Regular expressions
+  val braces = """([^\{]*)\{(\w+)\}(.*)""".r
+
+  val map: Map[String, String];
+
+  def expand(s: String): String = {
+    (braces findFirstIn s) match {
+      case None =>
+	return s
+      case Some(braces(before, name, after)) =>
+	return expand(before + map(name) + after)
+    }
+  }
+  // val Braces(name) = "{nmchar}+"
+}
 
 class CSSLex extends RegexParsers {
   val token_table = """
@@ -84,9 +108,6 @@ w 	[ \t\r\n\f]*
     "nl" -> """\n|\r\n|\r|\f""",
     "w" -> """[ \t\r\n\f]*""")
 
-  //val Braces = """{(\w+)}""".r
-  // see book section 24.8
-  // val Braces(name) = "{nmchar}+"
 }
 
 
