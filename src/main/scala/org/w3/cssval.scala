@@ -117,9 +117,7 @@ any         : [ IDENT | NUMBER | PERCENTAGE | DIMENSION | STRING
 
   def statement: Parser[Any] = ruleset // | at-rule
 
-  /* TODO: report CSS 2.1 grammar bug: it doesn't allow space
-  between selector and '{' */
-  def ruleset: Parser[Any] = (opt(selector) ~ rep(S) ~ "{" ~ 
+  def ruleset: Parser[Any] = (opt(selector) ~ "{" ~ 
 		repsep(rep(S) ~ declaration ~ rep(S), ";") ~
 		rep(S) ~ "}" ~ rep(S) )
   def selector: Parser[Any] = rep1(any)
@@ -128,8 +126,8 @@ any         : [ IDENT | NUMBER | PERCENTAGE | DIMENSION | STRING
   def value: Parser[Any] = rep1( any 
 			       // TODO: | block | ATKEYWORD rep(S)
 			     )
-  def any: Parser[Any] = ( ident // TODO IDENT | NUMBER ...
-	   )
+  def any: Parser[Any] = ( ident  // TODO IDENT | NUMBER ...
+	   ) ~ rep(S)
 }
 
 class CSSParser extends CSSCore {
