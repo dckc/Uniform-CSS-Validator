@@ -27,7 +27,7 @@ class MacroSpec extends Spec with ShouldMatchers {
 
 class CSSTokens extends CSSLex {
   def tokens: Parser[Any] = rep (
-    IDENT |
+    pIDENT |
     `:` |
     `{` |
       `}` |
@@ -35,16 +35,16 @@ class CSSTokens extends CSSLex {
     )
 
   def tokensXXX: Parser[Any] = (
-    IDENT |
-    ATKEYWORD |
-    STRING |
-    INVALID |
-    HASH |
-    NUMBER |
-    PERCENTAGE |
-    DIMENSION |
-    URI |
-    UNICODE_RANGE |
+    pIDENT |
+    pATKEYWORD |
+    pSTRING |
+    pINVALID |
+    pHASH |
+    pNUMBER |
+    pPERCENTAGE |
+    pDIMENSION |
+    pURI |
+    pUNICODE_RANGE |
     CDO |
     CDC |
     `:` |
@@ -57,7 +57,7 @@ class CSSTokens extends CSSLex {
       `]` |
     S |
     COMMENT |
-    FUNCTION |
+    pFUNCTION |
     INCLUDES |
     DASHMATCH |
     DELIM
@@ -75,8 +75,18 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
 
       (l.parseAll(l.tokens, testdata).toString()
        should equal (
-	 "[3.3] parsed: List(iIDENT(blockquote), {, iIDENT(text-align), :, iIDENT(right), })") )
+	 "[3.3] parsed: List(IDENT(blockquote), {, IDENT(text-align), :, IDENT(right), })") )
     }
+
+    it("should handle noop escapes in identifiers, per example in 4.1.3") {
+      val l = new CSSTokens;
+
+      (l.parseAll(l.pIDENT, "te\\st").toString()
+       should equal ("""[1.6] parsed: IDENT(test)""") )
+    }
+
+
+    // @@ it("should handle escaped newlines in strings") is pending()
   }
 
   describe("CSS Core") {
@@ -85,7 +95,7 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
       val css = new CSSCore;
 
       (css.parseAll(css.stylesheet, testdata).toString()
-       should equal ("[3.3] parsed: List((((((Some(List((iIDENT(blockquote)~List())))~{)~List(((List()~((((iIDENT(text-align)~List())~:)~List())~List((iIDENT(right)~List()))))~List())))~List())~})~List()))") )
+       should equal ("[3.3] parsed: List((((((Some(List(IDENT(blockquote)))~{)~List(((List()~((((IDENT(text-align)~List())~:)~List())~List(IDENT(right))))~List())))~List())~})~List()))") )
     }
   }
 }

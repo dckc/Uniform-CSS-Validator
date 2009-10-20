@@ -14,6 +14,9 @@
  * Programming in Scala
  * chapter 31 on Parsing
  * section 24.7 Regular expressions
+ *
+ * Java regex syntax
+ * http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html
  */
 
 
@@ -22,34 +25,35 @@ package org.w3.cssval
 import scala.util.parsing.combinator.{Parsers, RegexParsers}
 
 abstract class Token
-// i prefix disambiguates (i for interpretation)
-case class iIDENT(name: String) extends Token
-case class iSTRING(value: String) extends Token
-case class iHASH(name: String) extends Token
-case class iNUMBER(value: Double) extends Token // hmm... Double?
-case class iPERCENTAGE(value: Double) extends Token
-case class iDIMENSION(value: Double, dim: String) extends Token
-case class iURI(i: String) extends Token
-case class iUNICODE_RANGE(min: Int, max: Int) extends Token
-case class iFUNCTION(name: String) extends Token
+case class IDENT(name: String) extends Token
+case class ATKEYWORD(name: String) extends Token
+case class STRING(value: String) extends Token
+case class INVALID(value: String) extends Token
+case class HASH(name: String) extends Token
+case class NUMBER(value: Double) extends Token // hmm... Double?
+case class PERCENTAGE(value: Double) extends Token
+case class DIMENSION(value: Double, dim: String) extends Token
+case class URI(i: String) extends Token
+case class UNICODE_RANGE(min: Int, max: Int) extends Token
+case class FUNCTION(name: String) extends Token
 
 class CSSLex extends RegexParsers with CSSMacros {
-  val IDENT = tok("{ident}") ^^ {
+  val pIDENT: Parser[Token] = tok("{ident}") ^^ {
     case s =>
       val n = unescape(s)
-      iIDENT(n)
+      IDENT(n)
   }
-  val ATKEYWORD = tok("@{ident}")
-  val STRING = tok("{string}")
-  val INVALID = tok("{invalid}")
-  val HASH = tok("#{name}")
-  val NUMBER = tok("{num}")
-  val PERCENTAGE = tok("{num}%")
-  val DIMENSION = tok("{num}{ident}")
+  val pATKEYWORD = tok("@{ident}")
+  val pSTRING = tok("{string}")
+  val pINVALID = tok("{invalid}")
+  val pHASH = tok("#{name}")
+  val pNUMBER = tok("{num}")
+  val pPERCENTAGE = tok("{num}%")
+  val pDIMENSION = tok("{num}{ident}")
 			// extra ()s to bind | to the right level
-  val URI = tok("""(url\({w}{string}{w}\))""" +
+  val pURI = tok("""(url\({w}{string}{w}\))""" +
 		"""|(url\({w}([!#$%&*-~]|{nonascii}|{escape})*{w}\))""")
-  val UNICODE_RANGE = tok("""u\+[0-9a-f?]{1,6}(-[0-9a-f]{1,6})?""")
+  val pUNICODE_RANGE = tok("""u\+[0-9a-f?]{1,6}(-[0-9a-f]{1,6})?""")
   val CDO = tok("<!--")
   val CDC = tok("-->")
   val `:` = tok(":")
@@ -65,7 +69,7 @@ class CSSLex extends RegexParsers with CSSMacros {
   // @@TODO: override def whiteSpace = S_.r
   // override def skipWhitespace = true
   val COMMENT = tok("""\/\*[^*]*\*+([^/*][^*]*\*+)*\/""")
-  val FUNCTION = tok("""{ident}\(""")
+  val pFUNCTION = tok("""{ident}\(""")
   val INCLUDES = tok("~=")
   val DASHMATCH = tok("|=")
   val DELIM = tok("@@ any other character not matched by the above rules, and neither a single nor a double quote")
@@ -204,12 +208,12 @@ any         : [ IDENT | NUMBER | PERCENTAGE | DIMENSION | STRING
 		rep(S) ~ "}" ~ rep(S) )
   def selector: Parser[Any] = rep1(any)
   def declaration: Parser[Any] = property ~ rep(S) ~ ":" ~ rep(S) ~ value
-  def property: Parser[Any] =  IDENT
+  def property: Parser[Any] =  pIDENT
   def value: Parser[Any] = rep1( any 
 			       // TODO: | block | ATKEYWORD rep(S)
 			     )
-  def any: Parser[Any] = ( IDENT  // TODO IDENT | NUMBER ...
-	   ) ~ rep(S)
+  def any: Parser[Any] = ( pIDENT  // TODO IDENT | NUMBER ...
+	   ) <~ rep(S)
 }
 
 class CSSParser extends CSSCore {
