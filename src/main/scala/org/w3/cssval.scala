@@ -22,9 +22,12 @@
 
 package org.w3.cssval
 
+import java.lang.CharSequence
 import scala.util.parsing.combinator.{Parsers, RegexParsers}
+import scala.util.matching.Regex
+import scala.util.matching.Regex.Match
 
-abstract class Token
+abstract class Token // sealed?
 case class IDENT(name: String) extends Token
 case class ATKEYWORD(name: String) extends Token
 case class STRING(value: String) extends Token
@@ -40,39 +43,84 @@ case class FUNCTION(name: String) extends Token
 class CSSLex extends RegexParsers with CSSMacros {
   val pIDENT: Parser[Token] = tok("{ident}") ^^ {
     case s =>
-      val n = unescape(s)
-      IDENT(n)
+      IDENT(unescape(s).toString)
   }
-  val pATKEYWORD = tok("@{ident}")
-  val pSTRING = tok("{string}")
+
+  val pATKEYWORD = new RegexParts("@({ident})") ^^ {
+    case m =>
+      ATKEYWORD(unescape(m.group(1)).toString)
+  }
+
+  val pSTRING = tok("{string}") ^^ {
+    case s =>
+      STRING(unescape(s.subSequence(1, s.length()-1)).toString)
+  }
+
   val pINVALID = tok("{invalid}")
-  val pHASH = tok("#{name}")
-  val pNUMBER = tok("{num}")
-  val pPERCENTAGE = tok("{num}%")
-  val pDIMENSION = tok("{num}{ident}")
+
+  val pHASH: Parser[Token] = tok("#{name}") ^^ {
+    case s =>
+      HASH(unescape(s.substring(1)).toString)
+  }
+
+  val pNUMBER: Parser[Token] = tok("{num}") ^^ {
+    case s =>
+      NUMBER(s.toDouble)
+  }
+
+  val pPERCENTAGE: Parser[Token] = new RegexParts("({num})%") ^^ {
+    case m =>
+      PERCENTAGE(m.group(1).toDouble)
+  }
+
+  val pDIMENSION: Parser[Token] = new RegexParts("({num})({ident})") ^^ {
+    case m =>
+      DIMENSION(m.group(1).toDouble, m.group(2))
+  }
+
+
+
+  /* <Yves> Dan, I know you are using the general parsing rules instead of the versionned grammar, however if you use the 'url' production there, it has a bug (see http://lists.w3.org/Archives/Public/www-style/2009Oct/0206.html) */
 			// extra ()s to bind | to the right level
   val pURI = tok("""(url\({w}{string}{w}\))""" +
 		"""|(url\({w}([!#$%&*-~]|{nonascii}|{escape})*{w}\))""")
   val pUNICODE_RANGE = tok("""u\+[0-9a-f?]{1,6}(-[0-9a-f]{1,6})?""")
-  val CDO = tok("<!--")
-  val CDC = tok("-->")
-  val `:` = tok(":")
-  val `;` = tok(";")
-  val `{` = tok("""\{""")
-  val `}` = tok("""\}""")
-  val `(` = tok("""\(""")
-  val `)` = tok("""\)""")
-  val `[` = tok("""\[""")
-  val `]` = tok("""\]""")
+  val CDO = literal("<!--")
+  val CDC = literal("-->")
+  val `:` = literal(":")
+  val `;` = literal(";")
+  val `{` = literal("{")
+  val `}` = literal("}")
+  val `(` = literal("(")
+  val `)` = literal(")")
+  val `[` = literal("[")
+  val `]` = literal("]")
   val S_ = """[ \t\r\n\f]+"""
   val S = tok(S_)
   // @@TODO: override def whiteSpace = S_.r
   // override def skipWhitespace = true
   val COMMENT = tok("""\/\*[^*]*\*+([^/*][^*]*\*+)*\/""")
   val pFUNCTION = tok("""{ident}\(""")
-  val INCLUDES = tok("~=")
-  val DASHMATCH = tok("|=")
+  val INCLUDES = literal("~=")
+  val DASHMATCH = literal("|=")
   val DELIM = tok("@@ any other character not matched by the above rules, and neither a single nor a double quote")
+
+  class RegexParts(defn: String) extends Parser[Match] {
+    val re = expand(defn).r
+    val p = regex(re)
+    
+    def apply(in: Input) = p(in) match {
+      case Success(s, in1) =>
+	// this runs the regex again. oh well.
+	Success((re findPrefixMatchOf s).get, in1)
+      case Failure(x, in1) =>
+	new Failure(("expected match of `" + re + "' but found " + in.first),
+		    in1)
+      // these cases aren't exhaustive; I can't figure out what
+      // to do about that. I suppose throwing a MatchError is reasonable
+    }
+  }
+
 
   def tok(s: String): Parser[String] = {
     expand(s).r
@@ -82,14 +130,14 @@ class CSSLex extends RegexParsers with CSSMacros {
    * In CSS 2.1, a backslash (\) character indicates three types of
    * character escapes. 
    */
-  def unescape(s: String): String = {
+  def unescape(cs: CharSequence): CharSequence = {
     // this could probably be optimized, using StringBuilder or some such...
     val re = ("""\\(?:(\n)""" +
 	      """|(?:([0-9a-f]{1,6})(?:(?:\r\n)|[ \n\r\t\f])?)""" +
 	      """|([^\n\r\f0-9a-f]))""").r
-    (re findFirstMatchIn s) match {
+    (re findFirstMatchIn cs) match {
       case None =>
-	return s
+	return cs
       case Some(m) =>
 	val (nl, hex, chr) = (m.group(1), m.group(2), m.group(3))
 	  /* First, inside a string, a backslash followed by a newline
@@ -107,7 +155,7 @@ class CSSLex extends RegexParsers with CSSMacros {
 		   //TODO: check for 0
 		   new String(Character.toChars(Integer.parseInt(hex, 16)))
 		 )
-        m.before + e + unescape(m.after.toString())
+        m.before + e + unescape(m.after)
     }
   }
 }
@@ -140,15 +188,20 @@ trait CSSMacros extends RegexMacros {
     "nonascii" ->  """[^\00-\0177]""", // \0 -> \00 \177 -> \0177 for Java
     "unicode" ->   """\\[0-9a-f]{1,6}({unicode_x}|[ \n\r\t\f])?""",
     // precedence of | is different in lex and regex, hence these _1 macros
+    // cf http://flex.sourceforge.net/manual/Patterns.html
     "unicode_x" -> """\r\n""",
     "escape" ->	"""{unicode}|{escape_x}""",
     "escape_x" -> """\\[^\n\r\f0-9a-f]""",
     "nmchar" -> "[_a-z0-9-]|{nonascii}|{escape}",
-    "num" -> """[0-9]+|{num_x}""",
+    // reversed order of | parts due to lex/regex impedence mismatch
+    // ugh... I wonder how many others are lurking
+    "num" -> """{num_x}|[0-9]+""",
     "num_x" -> """[0-9]*\.[0-9]+""",
     "string" -> "{string1}|{string2}",
-    "string1" -> ("""\"([^\n\r\f\\"]|{nl_x}|{escape})*""" + "\\\""),
-    "string2" -> """\'([^\n\r\f\\']|{nl_x}|{escape})*\'""",
+    "string1" -> "\"{string1_1}\"",
+    "string1_1" -> """([^\n\r\f\\"]|{nl_x}|{escape})*""",
+    "string2" -> "'{string2_1}'",
+    "string2_1" -> """([^\n\r\f\\']|\\{nl}|{escape})*""",
     "invalid" -> "{invalid1}|{invalid2}",
     "invalid1" -> """\"([^\n\r\f\\"]|{nl_x}|{escape})*""",
     "invalid2" -> """\'([^\n\r\f\\']|{nl_x}|{escape})*""",

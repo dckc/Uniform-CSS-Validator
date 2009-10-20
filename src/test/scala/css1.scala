@@ -26,7 +26,7 @@ class MacroSpec extends Spec with ShouldMatchers {
 }
 
 class CSSTokens extends CSSLex {
-  def tokens: Parser[Any] = rep (
+  def tokensXXX: Parser[Any] = rep (
     pIDENT |
     `:` |
     `{` |
@@ -34,15 +34,16 @@ class CSSTokens extends CSSLex {
     S
     )
 
-  def tokensXXX: Parser[Any] = (
+  def tokens: Parser[Any] = rep (
     pIDENT |
     pATKEYWORD |
     pSTRING |
     pINVALID |
     pHASH |
-    pNUMBER |
     pPERCENTAGE |
     pDIMENSION |
+    // after PERCENTAGE and DIMENSION to implement longest-matching rule
+    pNUMBER |
     pURI |
     pUNICODE_RANGE |
     CDO |
@@ -70,23 +71,57 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
   """
 
   describe("CSS Lexer") {
-    it("should split the input into tokens") {
-      val l = new CSSTokens;
-
-      (l.parseAll(l.tokens, testdata).toString()
-       should equal (
-	 "[3.3] parsed: List(IDENT(blockquote), {, IDENT(text-align), :, IDENT(right), })") )
-    }
-
     it("should handle noop escapes in identifiers, per example in 4.1.3") {
       val l = new CSSTokens;
 
-      (l.parseAll(l.pIDENT, "te\\st").toString()
-       should equal ("""[1.6] parsed: IDENT(test)""") )
+      (l.parseAll(l.pIDENT, "te\\st").get
+       should equal (IDENT("test")) )
     }
 
 
+    it("should handle numbers") {
+      val l = new CSSTokens;
+
+      (l.parseAll(l.tokens, "1 1.2").get
+       should equal (List(NUMBER(1.0), NUMBER(1.2))) )
+    }
+
+    it("should split the input into tokens") {
+      val l = new CSSTokens;
+
+      (l.parseAll(l.tokens, testdata).get
+       should equal (List(IDENT("blockquote"),
+			  "{",
+			  IDENT("text-align"),
+			  ":",
+			  IDENT("right"),
+			  "}") ) )
+
+      (l.parseAll(l.tokens,
+		  """identifier @keyword "string1" 'string2' #hash 1 1.2 """
+		  + """10% 10.5% 12pt 12.5pt""").get
+       should equal (List(IDENT("identifier"),
+			  ATKEYWORD("keyword"),
+			  STRING("string1"),
+			  STRING("string2"),
+			  HASH("hash"),
+			  NUMBER(1.0),
+			  NUMBER(1.2),
+			  PERCENTAGE(10.0),
+			  PERCENTAGE(10.5),
+			  DIMENSION(12.0, "pt"),
+			  DIMENSION(12.5, "pt") )) )
+    }
+
+    // trying to ape http://www.scalatest.org/getting_started_with_spec
+    // and failing thusly:
+    // css1.scala:112: not found: value pending
+    // [error] it("should handle \000 in strings") (pending)
+
+    // @@it("should handle \000 in strings") (pending)
     // @@ it("should handle escaped newlines in strings") is pending()
+    // lots of testing of longest-matching rule
+
   }
 
   describe("CSS Core") {
