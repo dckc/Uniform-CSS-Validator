@@ -71,6 +71,15 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
   """
 
   describe("CSS Lexer") {
+
+    // trying to ape http://www.scalatest.org/getting_started_with_spec
+    // but support for pending tests was only added in 1.0,
+    // which doesn't work with sbt yet.
+
+    ignore("should handle \000 in strings") { }
+    ignore("should handle escaped newlines in strings") { }
+    ignore("should use the longest-matching rule") { }
+
     it("should handle noop escapes in identifiers, per example in 4.1.3") {
       val l = new CSSTokens;
 
@@ -112,15 +121,6 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
 			  DIMENSION(12.0, "pt"),
 			  DIMENSION(12.5, "pt") )) )
     }
-
-    // trying to ape http://www.scalatest.org/getting_started_with_spec
-    // and failing thusly:
-    // css1.scala:112: not found: value pending
-    // [error] it("should handle \000 in strings") (pending)
-
-    // @@it("should handle \000 in strings") (pending)
-    // @@ it("should handle escaped newlines in strings") is pending()
-    // lots of testing of longest-matching rule
 
   }
 

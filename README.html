@@ -314,19 +314,19 @@ cssval$ sbt test
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference internal" href="#scala-development" id="id17">Scala development</a><ul>
-<li><a class="reference internal" href="#simple-build-tool-sbt" id="id18">Simple Build Tool (sbt)</a></li>
-<li><a class="reference internal" href="#scalatest" id="id19">ScalaTest</a></li>
-<li><a class="reference internal" href="#emacs-and-scala" id="id20">Emacs and Scala</a></li>
+<li><a class="reference internal" href="#scala-development" id="id18">Scala development</a><ul>
+<li><a class="reference internal" href="#simple-build-tool-sbt" id="id19">Simple Build Tool (sbt)</a></li>
+<li><a class="reference internal" href="#scalatest" id="id20">ScalaTest</a></li>
+<li><a class="reference internal" href="#emacs-and-scala" id="id21">Emacs and Scala</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#version-control" id="id21">Version Control</a></li>
-<li><a class="reference internal" href="#open-source-software-license" id="id22">Open Source Software License</a></li>
-<li><a class="reference internal" href="#colophon" id="id23">Colophon</a></li>
+<li><a class="reference internal" href="#version-control" id="id22">Version Control</a></li>
+<li><a class="reference internal" href="#open-source-software-license" id="id23">Open Source Software License</a></li>
+<li><a class="reference internal" href="#colophon" id="id24">Colophon</a></li>
 </ul>
 </div>
 <div class="section" id="scala-development">
-<h1><a class="toc-backref" href="#id17">Scala development</a></h1>
+<h1><a class="toc-backref" href="#id18">Scala development</a></h1>
 <blockquote>
 <p>Scala is a general purpose programming language designed to
 express common programming patterns in a concise, elegant, and
@@ -343,7 +343,7 @@ dowloaded is:</p>
 <p>Once you download and unpack that, you should be able to see that
 interpreter and compiler work as per <a class="reference external" href="http://www.scala-lang.org/node/166">Getting Started with Scala</a>.</p>
 <div class="section" id="simple-build-tool-sbt">
-<h2><a class="toc-backref" href="#id18">Simple Build Tool (sbt)</a></h2>
+<h2><a class="toc-backref" href="#id19">Simple Build Tool (sbt)</a></h2>
 <p>The Scala tribe seems to use <a class="reference external" href="http://code.google.com/p/simple-build-tool/">sbt</a> in place of make or ant.</p>
 <p>Audit trail:</p>
 <pre class="literal-block">
@@ -371,17 +371,20 @@ src/
 into some <tt class="docutils literal"><span class="pre">lib</span></tt> directories until things started working.</p>
 </div>
 <div class="section" id="scalatest">
-<h2><a class="toc-backref" href="#id19">ScalaTest</a></h2>
+<h2><a class="toc-backref" href="#id20">ScalaTest</a></h2>
 <p><a class="reference external" href="http://www.scalatest.org/download">ScalaTest</a> is a leading test framework for Scala.</p>
 <p>Audit trail:</p>
 <pre class="literal-block">
-MD5 (scalatest-1.0.zip) = d41d8cd98f00b204e9800998ecf8427e
+68ab03f9109ef18c9dcce048da3d8dab  scalatest-0.9.5.zip
 </pre>
 <p>I unpacked it and put scala-test-1.0.jar in <tt class="docutils literal"><span class="pre">lib</span></tt>... or was it
 <tt class="docutils literal"><span class="pre">project/boot/scala-2.7.6/lib</span></tt>.</p>
+<p>There seem to be some version skew issues between sbt and ScalaTest.
+For a work-around (that I have not yet tried), see:
+<a class="reference external" href="http://groups.google.com/group/simple-build-tool/browse_thread/thread/fb967ee255dff7f9/8efd9870026481cb?lnk=gst&amp;q=ScalaTest+1.0#8efd9870026481cb">ScalaTest 1.0</a>.</p>
 </div>
 <div class="section" id="emacs-and-scala">
-<h2><a class="toc-backref" href="#id20">Emacs and Scala</a></h2>
+<h2><a class="toc-backref" href="#id21">Emacs and Scala</a></h2>
 <p>With <tt class="docutils literal"><span class="pre">scala-mode</span></tt>, emacs helps with indentation and syntax coloring.
 With <tt class="docutils literal"><span class="pre">sbt.el</span></tt>, emacs can navigate compiler errors (with some
 glitches). My set-up is pretty rough; some notes:</p>
@@ -400,12 +403,12 @@ commit  000e748597d9b73e2da026029afc4ca9248aa936
 </div>
 </div>
 <div class="section" id="version-control">
-<h1><a class="toc-backref" href="#id21">Version Control</a></h1>
+<h1><a class="toc-backref" href="#id22">Version Control</a></h1>
 <p>Project history is available on <a class="reference external" href="http://bitbucket.org/">bitbucket</a> in a <a class="reference external" href="http://bitbucket.org/DanC/cssval/">cssval</a> mercurial/hg
 repository, whose original revision is 0:4ac7bd6d32f2.</p>
 </div>
 <div class="section" id="open-source-software-license">
-<h1><a class="toc-backref" href="#id22">Open Source Software License</a></h1>
+<h1><a class="toc-backref" href="#id23">Open Source Software License</a></h1>
 <p>Copyright (c) 2009 World Wide Web Consortium, (Massachusetts
 Institute of Technology, European Research Consortium for Informatics
 and Mathematics, Keio University). All Rights Reserved. This work is
@@ -416,7 +419,7 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
 <p>See also: Open Source Initiative <a class="reference external" href="http://www.opensource.org/licenses/W3C.php">certification</a>.</p>
 </div>
 <div class="section" id="colophon">
-<h1><a class="toc-backref" href="#id23">Colophon</a></h1>
+<h1><a class="toc-backref" href="#id24">Colophon</a></h1>
 <p>This document is written using <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> conventions.</p>
 </div>
 </div>
