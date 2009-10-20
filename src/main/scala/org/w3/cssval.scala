@@ -15,60 +15,84 @@ package org.w3.cssval
 
 import scala.util.parsing.combinator.{Parsers, RegexParsers}
 
-abstract class Macros {
+trait RegexMacros {
   // see book section 24.7 Regular expressions
-  val braces = """([^\{]*)\{(\w+)\}(.*)""".r
+  val braces = """\{(\w+)\}""".r
 
   val map: Map[String, String];
 
   def expand(s: String): String = {
-    (braces findFirstIn s) match {
+    (braces findFirstMatchIn s) match {
       case None =>
 	return s
-      case Some(braces(before, name, after)) =>
-	return expand(before + map(name) + after)
+      case Some(m) =>
+	// TODO: handle case of name not in map
+	val n = m.group(1)
+	return (if (map.contains(n))
+		expand(m.before + "(?:" + map(n) + ")" + m.after)
+		else s)
     }
   }
-  // val Braces(name) = "{nmchar}+"
 }
 
-class CSSLex extends RegexParsers {
-  val token_table = """
-IDENT 	{ident}
-ATKEYWORD 	@{ident}
-STRING 	{string}
-INVALID 	{invalid}
-HASH 	#{name}
-NUMBER 	{num}
-PERCENTAGE 	{num}%
-DIMENSION 	{num}{ident}
-URI 	url\({w}{string}{w}\)
-|url\({w}([!#$%&*-~]|{nonascii}|{escape})*{w}\)
-UNICODE-RANGE 	u\+[0-9a-f?]{1,6}(-[0-9a-f]{1,6})?
-CDO 	<!--
-CDC 	-->
-: 	:
-; 	;
-{ 	\{
-} 	\}
-( 	\(
-) 	\)
-[ 	\[
-] 	\]
-S 	[ \t\r\n\f]+
-COMMENT 	\/\*[^*]*\*+([^/*][^*]*\*+)*\/
-FUNCTION 	{ident}\(
-INCLUDES 	~=
-DASHMATCH 	|=
-DELIM 	any other character not matched by the above rules, and neither a single nor a double quote
-""";
+class CSSLex extends RegexParsers with RegexMacros {
+  /* TODO: build this map from macro_table below */
+  override val map: Map[String, String] = Map(
+    "ident" -> "[-]?{nmstart}{nmchar}*",
+    "name" -> 	"{nmchar}+",
+    "nmstart" -> "[_a-z]|{nonascii}|{escape}",
+    "nonascii" ->  """[^\00-\0177]""", // \0 -> \00 \177 -> \0177 for Java
+    "unicode" ->   """\\[0-9a-f]{1,6}({unicode_x}|[ \n\r\t\f])?""",
+    // precedence of | is different in lex and regex, hence these _1 macros
+    "unicode_x" -> """\r\n""",
+    "escape" ->	"""{unicode}|{escape_x}""",
+    "escape_x" -> """\\[^\n\r\f0-9a-f]""",
+    "nmchar" -> "[_a-z0-9-]|{nonascii}|{escape}",
+    "num" -> """[0-9]+|{num_x}""",
+    "num_x" -> """[0-9]*\.[0-9]+""",
+    "string" -> "{string1}|{string2}",
+    "string1" -> ("""\"([^\n\r\f\\"]|{nl_x}|{escape})*""" + "\\\""),
+    "string2" -> """\'([^\n\r\f\\']|{nl_x}|{escape})*\'""",
+    "invalid" -> "{invalid1}|{invalid2}",
+    "invalid1" -> """\"([^\n\r\f\\"]|{nl_x}|{escape})*""",
+    "invalid2" -> """\'([^\n\r\f\\']|{nl_x}|{escape})*""",
+    "nl" -> """\n|{nl_y}|\r|\f""",
+    "nl_x" -> """\\{nl}""",
+    "nl_y" -> """\r\n""",
+    "w" -> """[ \t\r\n\f]*""")
 
-  /* TODO: convert the above to something like the below automatically */
+  val IDENT = tok("{ident}")
+  val ATKEYWORD = tok("@{ident}")
+  val STRING = tok("{string}")
+  val INVALID = tok("{invalid}")
+  val HASH = tok("#{name}")
+  val NUMBER = tok("{num}")
+  val PERCENTAGE = tok("{num}%")
+  val DIMENSION = tok("{num}{ident}")
+			// extra ()s to bind | to the right level
+  val URI = tok("""(url\({w}{string}{w}\))""" +
+		"""|(url\({w}([!#$%&*-~]|{nonascii}|{escape})*{w}\))""")
+  val UNICODE_RANGE = tok("""u\+[0-9a-f?]{1,6}(-[0-9a-f]{1,6})?""")
+  val CDO = tok("<!--")
+  val CDC = tok("-->")
+  val `:` = tok(":")
+  val `;` = tok(";")
+  val `{` = tok("""\{""")
+  val `}` = tok("""\}""")
+  val `(` = tok("""\(""")
+  val `)` = tok("""\)""")
+  val `[` = tok("""\[""")
+  val `]` = tok("""\]""")
+  val S = tok("""[ \t\r\n\f]+""")
+  val COMMENT = tok("""\/\*[^*]*\*+([^/*][^*]*\*+)*\/""")
+  val FUNCTION = tok("""{ident}\(""")
+  val INCLUDES = tok("~=")
+  val DASHMATCH = tok("|=")
+  val DELIM = tok("@@ any other character not matched by the above rules, and neither a single nor a double quote")
 
-  val CDO: Parser[String] = """<!--""".r
-  val CDC: Parser[String] = """-->""".r
-  val S: Parser[String] = """[ \t\r\n\f]+""".r
-  val ident: Parser[String] = """[a-zA-Z][a-zA-Z0-9-]*""".r // TODO:FIX
+  def tok(s: String): Parser[String] = {
+    expand(s).r
+  }
 
   val macro_table = """
 ident 	[-]?{nmstart}{nmchar}*
@@ -88,25 +112,6 @@ invalid2	\'([^\n\r\f\\']|\\{nl}|{escape})*
 nl 	\n|\r\n|\r|\f
 w 	[ \t\r\n\f]*
 """;
-
-  /* TODO: convert the above to something like the below automatically */
-  val macros = Map(
-    "ident" -> "[-]?{nmstart}{nmchar}*",
-    "name" -> 	"{nmchar}+",
-    "nmstart" -> "[_a-z]|{nonascii}|{escape}",
-    "nonascii" ->  "[^\0-\177]",
-    "unicode" ->   "\\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?",
-    "escape" ->	"{unicode}|\\[^\n\r\f0-9a-f]",
-    "nmchar" -> "[_a-z0-9-]|{nonascii}|{escape}",
-    "num" -> """[0-9]+|[0-9]*\.[0-9]+""",
-    "string" -> "{string1}|{string2}",
-    "string1" -> ("""\"([^\n\r\f\\"]|\\{nl}|{escape})*""" + "\\\""),
-    "string2" -> """\'([^\n\r\f\\']|\\{nl}|{escape})*\'""",
-    "invalid" -> "{invalid1}|{invalid2}",
-    "invalid1" -> """\"([^\n\r\f\\"]|\\{nl}|{escape})*""",
-    "invalid2" -> """\'([^\n\r\f\\']|\\{nl}|{escape})*""",
-    "nl" -> """\n|\r\n|\r|\f""",
-    "w" -> """[ \t\r\n\f]*""")
 
 }
 
@@ -143,11 +148,11 @@ any         : [ IDENT | NUMBER | PERCENTAGE | DIMENSION | STRING
 		rep(S) ~ "}" ~ rep(S) )
   def selector: Parser[Any] = rep1(any)
   def declaration: Parser[Any] = property ~ rep(S) ~ ":" ~ rep(S) ~ value
-  def property: Parser[Any] =  ident //TODO IDENT
+  def property: Parser[Any] =  IDENT
   def value: Parser[Any] = rep1( any 
 			       // TODO: | block | ATKEYWORD rep(S)
 			     )
-  def any: Parser[Any] = ( ident  // TODO IDENT | NUMBER ...
+  def any: Parser[Any] = ( IDENT  // TODO IDENT | NUMBER ...
 	   ) ~ rep(S)
 }
 
