@@ -10,13 +10,18 @@
 //    http://www.w3.org/TR/2009/CR-CSS2-20090908 
 // esp section 4 Syntax and basic data types
 // http://www.w3.org/TR/CSS2/syndata.html
+/*
+ * Programming in Scala
+ * chapter 31 on Parsing
+ * section 24.7 Regular expressions
+ */
+
 
 package org.w3.cssval
 
 import scala.util.parsing.combinator.{Parsers, RegexParsers}
 
 trait RegexMacros {
-  // see book section 24.7 Regular expressions
   val braces = """\{(\w+)\}""".r
 
   val map: Map[String, String];
@@ -34,6 +39,18 @@ trait RegexMacros {
     }
   }
 }
+
+abstract class Token
+// i prefix disambiguates (i for interpretation)
+case class iIDENT(name: String) extends Token
+case class iSTRING(value: String) extends Token
+case class iHASH(name: String) extends Token
+case class iNUMBER(value: Double) extends Token // hmm... Double?
+case class iPERCENTAGE(value: Double) extends Token
+case class iDIMENSION(value: Double, dim: String) extends Token
+case class iURI(i: String) extends Token
+case class iUNICODE_RANGE(min: Int, max: Int) extends Token
+case class iFUNCTION(name: String) extends Token
 
 class CSSLex extends RegexParsers with RegexMacros {
   /* TODO: build this map from macro_table below */
@@ -61,7 +78,30 @@ class CSSLex extends RegexParsers with RegexMacros {
     "nl_y" -> """\r\n""",
     "w" -> """[ \t\r\n\f]*""")
 
-  val IDENT = tok("{ident}")
+  val macro_table = """
+ident 	[-]?{nmstart}{nmchar}*
+name 	{nmchar}+
+nmstart 	[_a-z]|{nonascii}|{escape}
+nonascii	[^\0-\177]
+unicode 	\\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?
+escape 	{unicode}|\\[^\n\r\f0-9a-f]
+nmchar 	[_a-z0-9-]|{nonascii}|{escape}
+num 	[0-9]+|[0-9]*\.[0-9]+
+string 	{string1}|{string2}
+string1 	\"([^\n\r\f\\"]|\\{nl}|{escape})*\"
+string2 	\'([^\n\r\f\\']|\\{nl}|{escape})*\'
+invalid 	{invalid1}|{invalid2}
+invalid1	\"([^\n\r\f\\"]|\\{nl}|{escape})*
+invalid2	\'([^\n\r\f\\']|\\{nl}|{escape})*
+nl 	\n|\r\n|\r|\f
+w 	[ \t\r\n\f]*
+""";
+
+  val IDENT = tok("{ident}") ^^ {
+    case s =>
+      val n = unescape(s)
+      iIDENT(n)
+  }
   val ATKEYWORD = tok("@{ident}")
   val STRING = tok("{string}")
   val INVALID = tok("{invalid}")
@@ -83,7 +123,10 @@ class CSSLex extends RegexParsers with RegexMacros {
   val `)` = tok("""\)""")
   val `[` = tok("""\[""")
   val `]` = tok("""\]""")
-  val S = tok("""[ \t\r\n\f]+""")
+  val S_ = """[ \t\r\n\f]+"""
+  val S = tok(S_)
+  // @@TODO: override def whiteSpace = S_.r
+  // override def skipWhitespace = true
   val COMMENT = tok("""\/\*[^*]*\*+([^/*][^*]*\*+)*\/""")
   val FUNCTION = tok("""{ident}\(""")
   val INCLUDES = tok("~=")
@@ -94,31 +137,42 @@ class CSSLex extends RegexParsers with RegexMacros {
     expand(s).r
   }
 
-  val macro_table = """
-ident 	[-]?{nmstart}{nmchar}*
-name 	{nmchar}+
-nmstart 	[_a-z]|{nonascii}|{escape}
-nonascii	[^\0-\177]
-unicode 	\\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?
-escape 	{unicode}|\\[^\n\r\f0-9a-f]
-nmchar 	[_a-z0-9-]|{nonascii}|{escape}
-num 	[0-9]+|[0-9]*\.[0-9]+
-string 	{string1}|{string2}
-string1 	\"([^\n\r\f\\"]|\\{nl}|{escape})*\"
-string2 	\'([^\n\r\f\\']|\\{nl}|{escape})*\'
-invalid 	{invalid1}|{invalid2}
-invalid1	\"([^\n\r\f\\"]|\\{nl}|{escape})*
-invalid2	\'([^\n\r\f\\']|\\{nl}|{escape})*
-nl 	\n|\r\n|\r|\f
-w 	[ \t\r\n\f]*
-""";
-
+  /*
+   * In CSS 2.1, a backslash (\) character indicates three types of
+   * character escapes. 
+   */
+  def unescape(s: String): String = {
+    // this could probably be optimized, using StringBuilder or some such...
+    val re = ("""\\(?:(\n)""" +
+	      """|(?:([0-9a-f]{1,6})(?:(?:\r\n)|[ \n\r\t\f])?)""" +
+	      """|([^\n\r\f0-9a-f]))""").r
+    (re findFirstMatchIn s) match {
+      case None =>
+	return s
+      case Some(m) =>
+	val (nl, hex, chr) = (m.group(1), m.group(2), m.group(3))
+	  /* First, inside a string, a backslash followed by a newline
+	   * is ignored */
+        val e = (if (nl != null)  ""
+          /* Second, it cancels the meaning of special CSS characters.*/
+		 else if (chr != null) chr
+          /* Third, backslash escapes allow authors to refer to
+           * characters they cannot easily put in a document. In this
+           * case, the backslash is followed by at most six
+           * hexadecimal digits (0..9A..F), which stand for the ISO
+           * 10646 ([ISO10646]) character with that number, which must
+           * not be zero. */
+		 else
+		   //TODO: check for 0
+		   new String(Character.toChars(Integer.parseInt(hex, 16)))
+		 )
+        m.before + e + unescape(m.after.toString())
+    }
+  }
 }
 
 
 class CSSCore extends CSSLex {
-
-/* cf. Programming in Scala chapter 31 */
 
 /*
  * core syntax for CSS

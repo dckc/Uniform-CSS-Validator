@@ -75,7 +75,7 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
 
       (l.parseAll(l.tokens, testdata).toString()
        should equal (
-	 "[3.3] parsed: List(blockquote, {, text-align, :, right, })") )
+	 "[3.3] parsed: List(iIDENT(blockquote), {, iIDENT(text-align), :, iIDENT(right), })") )
     }
   }
 
@@ -85,7 +85,7 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
       val css = new CSSCore;
 
       (css.parseAll(css.stylesheet, testdata).toString()
-       should equal ("[3.3] parsed: List((((((Some(List((blockquote~List())))~{)~List(((List()~((((text-align~List())~:)~List())~List((right~List()))))~List())))~List())~})~List()))") )
+       should equal ("[3.3] parsed: List((((((Some(List((iIDENT(blockquote)~List())))~{)~List(((List()~((((iIDENT(text-align)~List())~:)~List())~List((iIDENT(right)~List()))))~List())))~List())~})~List()))") )
     }
   }
 }
