@@ -133,10 +133,12 @@ class CSSLex extends RegexParsers with CSSMacros {
    * character escapes. 
    */
   def unescape(cs: CharSequence): CharSequence = {
-    // this could probably be optimized, using StringBuilder or some such...
+    // This is a purely functional implementation;
+    // we'll leave optimization to the compiler until
+    // performance measurements suggest otherwise.
     val re = ("""\\(?:(\n)""" +
-	      """|(?:([0-9a-f]{1,6})(?:(?:\r\n)|[ \n\r\t\f])?)""" +
-	      """|([^\n\r\f0-9a-f]))""").r
+	      """|(?:([0-9a-fA-F]{1,6})(?:(?:\r\n)|[ \n\r\t\f])?)""" +
+	      """|([^\n\r\f0-9a-fA-F]))""").r
     (re findFirstMatchIn cs) match {
       case None =>
 	return cs
@@ -153,10 +155,13 @@ class CSSLex extends RegexParsers with CSSMacros {
            * hexadecimal digits (0..9A..F), which stand for the ISO
            * 10646 ([ISO10646]) character with that number, which must
            * not be zero. */
-		 else
-		   //TODO: check for 0
-		   new String(Character.toChars(Integer.parseInt(hex, 16)))
-		 )
+		 else {
+		   val i = Integer.parseInt(hex, 16)
+		   val replacement = "\uFFFD"
+		   if (i > 0 && i <= 0x10FFFF) new String(Character.toChars(i))
+		   else replacement
+		 }
+	       )
         m.before + e + unescape(m.after)
     }
   }
@@ -186,15 +191,16 @@ trait CSSMacros extends RegexMacros {
   override val map: Map[String, String] = Map(
     "ident" -> "[-]?{nmstart}{nmchar}*",
     "name" -> 	"{nmchar}+",
-    "nmstart" -> "[_a-z]|{nonascii}|{escape}",
+    // uppercase too
+    "nmstart" -> "[_a-zA-Z]|{nonascii}|{escape}",
     "nonascii" ->  """[^\00-\0177]""", // \0 -> \00 \177 -> \0177 for Java
-    "unicode" ->   """\\[0-9a-f]{1,6}({unicode_x}|[ \n\r\t\f])?""",
+    "unicode" ->   """\\[0-9a-fA-F]{1,6}({unicode_x}|[ \n\r\t\f])?""",
     // precedence of | is different in lex and regex, hence these _1 macros
     // cf http://flex.sourceforge.net/manual/Patterns.html
     "unicode_x" -> """\r\n""",
     "escape" ->	"""{unicode}|{escape_x}""",
-    "escape_x" -> """\\[^\n\r\f0-9a-f]""",
-    "nmchar" -> "[_a-z0-9-]|{nonascii}|{escape}",
+    "escape_x" -> """\\[^\n\r\f0-9a-fA-F]""",
+    "nmchar" -> "[_a-zA-Z0-9-]|{nonascii}|{escape}",
     // reversed order of | parts due to lex/regex impedence mismatch
     // ugh... I wonder how many others are lurking
     "num" -> """{num_x}|[0-9]+""",

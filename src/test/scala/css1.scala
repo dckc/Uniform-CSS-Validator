@@ -56,19 +56,16 @@ class CSSTokens extends CSSLex {
 }
 
 class CSSSyntaxSpec extends Spec with ShouldMatchers {
-  val testdata = """
-  blockquote { text-align: right }
-  """
-
   describe("CSS Lexer") {
+    val l = new CSSTokens;
 
     // trying to ape http://www.scalatest.org/getting_started_with_spec
     // but support for pending tests was only added in 1.0,
     // which doesn't work with sbt yet.
 
-    it("should skip comments as well as whitespace") {
-      val l = new CSSTokens;
+    ignore("should use the longest-matching rule") { }
 
+    it("should skip comments as well as whitespace per 4.1.1 Tokenization") {
       (l.parseAll(l.tokens, "h1 /* comment */ { background: blue }").get
        should equal (List(IDENT("h1"),
 			  "{",
@@ -79,9 +76,57 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
 
     }
 
+    ignore("should do: a comment before or within the @charset rule disables the @charset.") { }
+
+    it("""should do: Other space-like characters, such as "em-space" (U+2003) and "ideographic space" (U+3000), are never part of white space.""") {
+      (l.parseAll(l.tokens, "h1 \u2003 \u3000 { background: blue }").get
+       should equal (List(IDENT("h1"),
+			  IDENT("\u2003"),
+			  IDENT("\u3000"),
+			  "{",
+			  IDENT("background"),
+			  ":",
+			  IDENT("blue"),
+			  "}")) )
+    }
+
+    it("""should do: Keywords must not be placed between quotes ("..." or '...').""") {
+      (l.parseAll(l.tokens, """
+		  width: "auto";
+		  border: "none";
+		  background: "red";
+		  """).get
+       should equal(List(IDENT("width"), ":", STRING("auto"), ";",
+			 IDENT("border"), ":", STRING("none"), ";",
+			 IDENT("background"), ":", STRING("red"), ";"))
+       )
+    }
+
+    it("""should do example from 4.1.2.1 Vendor-specific extensionsa""") {
+      (l.parseAll(l.tokens, """
+		  -moz-box-sizing
+		  -moz-border-radius
+		  -wap-accesskey
+		  """).get
+       should equal (List(IDENT("-moz-box-sizing"),
+			  IDENT("-moz-border-radius"),
+			  IDENT("-wap-accesskey") )) )
+    }
+
+    it("""should do examples from 4.1.3 Characters and case""") {
+      (l.parseAll(l.tokens, """B\&W\? B\26 W\3F""").get
+       should equal (List(IDENT("B&W?"), IDENT("B&W?"))) )
+
+      (l.parseAll(l.tokens, """\7B  {  \32  2""").get
+       should equal (List(IDENT("{"), "{", IDENT("2"), NUMBER(2))) )
+    }
+    it("""should handle out-of-range escape numbers somehow, per 4.1.3""") {
+      (l.parseAll(l.tokens, """\110000""").get
+       should equal (List(IDENT("\uFFFD"))) )
+    }
+
     ignore("should handle \000 in strings") { }
     ignore("should handle escaped newlines in strings") { }
-    ignore("should use the longest-matching rule") { }
 
     it("should handle noop escapes in identifiers, per example in 4.1.3") {
       val l = new CSSTokens;
@@ -99,9 +144,7 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
     }
 
     it("should split the input into tokens") {
-      val l = new CSSTokens;
-
-      (l.parseAll(l.tokens, testdata).get
+      (l.parseAll(l.tokens, "blockquote { text-align: right }").get
        should equal (List(IDENT("blockquote"),
 			  "{",
 			  IDENT("text-align"),
@@ -132,8 +175,9 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
     it("should handle a basic bit of CSS syntax") {
       val css = new CSSCore;
 
-      (css.parseAll(css.stylesheet, testdata).toString()
-       should equal ("[3.3] parsed: List((((Some(List(IDENT(blockquote)))~{)~List(((IDENT(text-align)~:)~List(IDENT(right)))))~}))") )
+      (css.parseAll(css.stylesheet,
+		    "blockquote { text-align: right }").toString()
+       should equal ("[1.33] parsed: List((((Some(List(IDENT(blockquote)))~{)~List(((IDENT(text-align)~:)~List(IDENT(right)))))~}))") )
     }
   }
 }
