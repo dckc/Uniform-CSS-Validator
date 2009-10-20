@@ -95,11 +95,13 @@ class CSSLex extends RegexParsers with CSSMacros {
   val `)` = literal(")")
   val `[` = literal("[")
   val `]` = literal("]")
-  val S_ = """[ \t\r\n\f]+"""
-  val S = tok(S_)
-  // @@TODO: override def whiteSpace = S_.r
-  // override def skipWhitespace = true
-  val COMMENT = tok("""\/\*[^*]*\*+([^/*][^*]*\*+)*\/""")
+
+  // Spec says:
+  //   COMMENT tokens do not occur in the grammar (to keep it readable), ...
+  // It's not clear why S isn't handled likewise. We're
+  // using whiteSpace support for both of them:
+  override val whiteSpace = expand("(?:{w_1}|{comment})+").r
+
   val pFUNCTION = tok("""{ident}\(""")
   val INCLUDES = literal("~=")
   val DASHMATCH = literal("|=")
@@ -208,7 +210,11 @@ trait CSSMacros extends RegexMacros {
     "nl" -> """\n|{nl_y}|\r|\f""",
     "nl_x" -> """\\{nl}""",
     "nl_y" -> """\r\n""",
-    "w" -> """[ \t\r\n\f]*""")
+    "w" -> """[ \t\r\n\f]*""",
+    // handling comments like whitespace
+    "w_1" -> """[ \t\r\n\f]""",
+    "comment" -> """/\*[^*]*\*+([^/*][^*]*\*+)*/"""
+    )
 
   val macro_table = """
 ident 	[-]?{nmstart}{nmchar}*
@@ -252,21 +258,20 @@ any         : [ IDENT | NUMBER | PERCENTAGE | DIMENSION | STRING
               | '(' S* any* ')' | '[' S* any* ']' ] S*;
  */
 
-  def stylesheet: Parser[Any] = rep ( CDO | CDC | S | statement )
+  def stylesheet: Parser[Any] = rep ( CDO | CDC | statement )
 
   def statement: Parser[Any] = ruleset // | at-rule
 
-  def ruleset: Parser[Any] = (opt(selector) ~ "{" ~ 
-		repsep(rep(S) ~ declaration ~ rep(S), ";") ~
-		rep(S) ~ "}" ~ rep(S) )
+  def ruleset: Parser[Any] = (
+    opt(selector) ~ "{" ~ repsep(declaration, ";") ~ "}" )
   def selector: Parser[Any] = rep1(any)
-  def declaration: Parser[Any] = property ~ rep(S) ~ ":" ~ rep(S) ~ value
+  def declaration: Parser[Any] = property ~ ":" ~ value
   def property: Parser[Any] =  pIDENT
   def value: Parser[Any] = rep1( any 
 			       // TODO: | block | ATKEYWORD rep(S)
 			     )
   def any: Parser[Any] = ( pIDENT  // TODO IDENT | NUMBER ...
-	   ) <~ rep(S)
+	   )
 }
 
 class CSSParser extends CSSCore {

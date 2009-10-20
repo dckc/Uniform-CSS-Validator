@@ -26,14 +26,6 @@ class MacroSpec extends Spec with ShouldMatchers {
 }
 
 class CSSTokens extends CSSLex {
-  def tokensXXX: Parser[Any] = rep (
-    pIDENT |
-    `:` |
-    `{` |
-      `}` |
-    S
-    )
-
   def tokens: Parser[Any] = rep (
     pIDENT |
     pATKEYWORD |
@@ -56,8 +48,6 @@ class CSSTokens extends CSSLex {
       `)` |
     `[` |
       `]` |
-    S |
-    COMMENT |
     pFUNCTION |
     INCLUDES |
     DASHMATCH |
@@ -75,6 +65,19 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
     // trying to ape http://www.scalatest.org/getting_started_with_spec
     // but support for pending tests was only added in 1.0,
     // which doesn't work with sbt yet.
+
+    it("should skip comments as well as whitespace") {
+      val l = new CSSTokens;
+
+      (l.parseAll(l.tokens, "h1 /* comment */ { background: blue }").get
+       should equal (List(IDENT("h1"),
+			  "{",
+			  IDENT("background"),
+			  ":",
+			  IDENT("blue"),
+			  "}") ) )
+
+    }
 
     ignore("should handle \000 in strings") { }
     ignore("should handle escaped newlines in strings") { }
@@ -130,7 +133,7 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
       val css = new CSSCore;
 
       (css.parseAll(css.stylesheet, testdata).toString()
-       should equal ("[3.3] parsed: List((((((Some(List(IDENT(blockquote)))~{)~List(((List()~((((IDENT(text-align)~List())~:)~List())~List(IDENT(right))))~List())))~List())~})~List()))") )
+       should equal ("[3.3] parsed: List((((Some(List(IDENT(blockquote)))~{)~List(((IDENT(text-align)~:)~List(IDENT(right)))))~}))") )
     }
   }
 }
