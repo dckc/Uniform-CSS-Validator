@@ -8,9 +8,9 @@ __ http://www.w3.org/People/Connolly/
 __ http://www.w3.org/
 
 CSS syntax evolves in a backward- and forward-compatible way; the CSS
-2.1 specification__ includes a unform grammar, applicable to all CSS
+2.1 specification__ includes a uniform grammar, applicable to all CSS
 versions.  The `original (2002) W3C CSS Validator`__ predates this
-unform grammar and maintenance is becoming an undue burden as a
+uniform grammar and maintenance is becoming an undue burden as a
 result. This is an attempt to build a validator using the uniform
 syntax.
 
@@ -46,7 +46,7 @@ from the `Scala Programming Language`__ site.
 __ http://www.scala-lang.org/
 
 For audit trail purposes, the md5 checksum of the package I
-dowloaded is::
+downloaded is::
 
   82934acf64d0c026de78b84e984f6743  scala-2.7.6.final.tgz
 
