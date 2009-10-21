@@ -51,11 +51,12 @@ class CSSTokens extends CSSLex {
     pFUNCTION |
     INCLUDES |
     DASHMATCH |
-    DELIM
+    pDELIM
   )
 }
 
 class CSSSyntaxSpec extends Spec with ShouldMatchers {
+
   describe("CSS Lexer") {
     val l = new CSSTokens;
 
@@ -64,6 +65,7 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
     // which doesn't work with sbt yet.
 
     ignore("should use the longest-matching rule") { }
+    ignore("lots more DELIM testing") { }
 
     it("should skip comments as well as whitespace per 4.1.1 Tokenization") {
       (l.parseAll(l.tokens, "h1 /* comment */ { background: blue }").get
@@ -153,12 +155,14 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
 			  "}") ) )
 
       (l.parseAll(l.tokens,
-		  """identifier @keyword "string1" 'string2' #hash 1 1.2 """
+		  """identifier @keyword "string1" 'string2' '\''"""
+		  + """#hash 1 1.2 """
 		  + """10% 10.5% 12pt 12.5pt""").get
        should equal (List(IDENT("identifier"),
 			  ATKEYWORD("keyword"),
 			  STRING("string1"),
 			  STRING("string2"),
+			  STRING("'"),
 			  HASH("hash"),
 			  NUMBER(1.0),
 			  NUMBER(1.2),
@@ -166,18 +170,81 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
 			  PERCENTAGE(10.5),
 			  DIMENSION(12.0, "pt"),
 			  DIMENSION(12.5, "pt") )) )
+
+      (l.parseAll(l.tokens, """{ causta: "}" + ({7} * '\'') }""").get
+       should equal (List("{", IDENT("causta"), ":",
+			  STRING("}"), DELIM("+"),
+			  "(", "{", NUMBER(7.0), "}",
+			  DELIM("*"), STRING("'"), ")", "}")) )
     }
 
   }
 
   describe("CSS Core") {
+    val css = new CSSCore;
+
+    ignore("CSS 2.1 user agents must ignore any '@import' rule that occurs inside a block or after any non-ignored statement other than an @charset or an @import rule. ") { }
+
+    it("should do example 1 from 4.1.5 At-rules") {
+      // Using toString seems like a kludge,
+      // but I can't figure out how to get the right
+      // ~ class visible.
+      (css.parseAll(css.stylesheet, """
+		    @import "subs.css";
+		    h1 { color: blue }
+		    @import "list.css";
+		    """).toString
+       should equal ("[5.7] parsed: List(((ATKEYWORD(import)~List(STRING(subs.css)))~Some(;)), (Some(List(IDENT(h1)))~List((IDENT(color)~List(IDENT(blue))))), ((ATKEYWORD(import)~List(STRING(list.css)))~Some(;)))")
+      )
+    }
+
+    it("should do example 2 from 4.1.5 At-rules") {
+      // TODO: factor this pattern out... use a list of inputs, expected outputs
+      (css.parseAll(css.stylesheet, """
+		    @import "subs.css";
+		    @media print {
+		      @import "print-main.css";
+		    body { font-size: 10pt }
+		    }
+		    h1 {color: blue }
+		    """).toString
+       should equal ("[8.7] parsed: List(((ATKEYWORD(import)~List(STRING(subs.css)))~Some(;)), ((ATKEYWORD(media)~List(IDENT(print)))~Some(({~List(ATKEYWORD(import), STRING(print-main.css), ;, IDENT(body), ({~List(IDENT(font-size), :, DIMENSION(10.0,pt))))))), (Some(List(IDENT(h1)))~List((IDENT(color)~List(IDENT(blue))))))")
+      )
+    }
+
+    it("should do example 3 from 4.1.5 At-rules") {
+      (css.parseAll(css.stylesheet, """
+		    @import "subs.css";
+		    @import "print-main.css" print;
+		    @media print {
+		      body { font-size: 10pt }
+		    }
+		    h1 {color: blue }
+		    """).toString
+       should equal ("[8.7] parsed: List(((ATKEYWORD(import)~List(STRING(subs.css)))~Some(;)), ((ATKEYWORD(import)~List(STRING(print-main.css), IDENT(print)))~Some(;)), ((ATKEYWORD(media)~List(IDENT(print)))~Some(({~List(IDENT(body), ({~List(IDENT(font-size), :, DIMENSION(10.0,pt))))))), (Some(List(IDENT(h1)))~List((IDENT(color)~List(IDENT(blue))))))")
+      )
+    }
+
+    it("should do examples from 4.1.6 Blocks") {
+      /*
+       * I reported this problem:
+       * # [CSS21] core grammar doesn't generate example in 4.1.6 Blocks
+       * Dan Connolly (Wednesday, 21 October) 
+       * http://lists.w3.org/Archives/Public/www-style/2009Oct/0248.html
+       * Message-Id: <1256098620.4607.22.camel@pav.lan> 
+       */
+      (css.parseAll(css.block, """{ causta: "}" + ({7} * '\'') }""").toString
+       should equal ("""[1.18] failure: `)' expected but `{' found
+
+{ causta: "}" + ({7} * '\'') }
+                 ^""")
+      )
+    }
 
     it("should handle a basic bit of CSS syntax") {
-      val css = new CSSCore;
-
       (css.parseAll(css.stylesheet,
 		    "blockquote { text-align: right }").toString()
-       should equal ("[1.33] parsed: List((((Some(List(IDENT(blockquote)))~{)~List(((IDENT(text-align)~:)~List(IDENT(right)))))~}))") )
+       should equal ("[1.33] parsed: List((Some(List(IDENT(blockquote)))~List((IDENT(text-align)~List(IDENT(right))))))") )
     }
   }
 }

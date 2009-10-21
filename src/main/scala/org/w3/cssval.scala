@@ -39,6 +39,7 @@ case class DIMENSION(value: Double, dim: String) extends Token
 case class URI(i: String) extends Token
 case class UNICODE_RANGE(min: Int, max: Int) extends Token
 case class FUNCTION(name: String) extends Token
+case class DELIM(c: String) extends Token
 
 class CSSLex extends RegexParsers with CSSMacros {
   val pIDENT: Parser[Token] = tok("{ident}") ^^ {
@@ -105,7 +106,13 @@ class CSSLex extends RegexParsers with CSSMacros {
   val pFUNCTION = tok("""{ident}\(""")
   val INCLUDES = literal("~=")
   val DASHMATCH = literal("|=")
-  val DELIM = tok("@@ any other character not matched by the above rules, and neither a single nor a double quote")
+
+  /* spec says: "any other character not matched by the above rules,
+  and neither a single nor a double quote". Not quite sure how to do that. */
+  val pDELIM: Parser[Token] = tok("[^'\"@{}():; \t\r\n\f]") ^^ {
+     case c =>
+      DELIM(c)
+  }
 
   class RegexParts(defn: String) extends Parser[Match] {
     val re = expand(defn).r
@@ -177,7 +184,6 @@ trait RegexMacros {
       case None =>
 	return s
       case Some(m) =>
-	// TODO: handle case of name not in map
 	val n = m.group(1)
 	return (if (map.contains(n))
 		expand(m.before + "(?:" + map(n) + ")" + m.after)
@@ -266,18 +272,26 @@ any         : [ IDENT | NUMBER | PERCENTAGE | DIMENSION | STRING
 
   def stylesheet: Parser[Any] = rep ( CDO | CDC | statement )
 
-  def statement: Parser[Any] = ruleset // | at-rule
+  def statement: Parser[Any] = ruleset | at_rule
+
+  def at_rule: Parser[Any] = pATKEYWORD ~ rep(any) ~ opt( block | ";" )
+
+  def block: Parser[Any] = "{" ~ rep( any | block | pATKEYWORD | ";" ) <~ "}"
 
   def ruleset: Parser[Any] = (
-    opt(selector) ~ "{" ~ repsep(declaration, ";") ~ "}" )
+    opt(selector) ~ ("{" ~> repsep(declaration, ";") <~ "}") )
   def selector: Parser[Any] = rep1(any)
-  def declaration: Parser[Any] = property ~ ":" ~ value
+  def declaration: Parser[Any] = property ~ (":" ~> value)
   def property: Parser[Any] =  pIDENT
-  def value: Parser[Any] = rep1( any 
-			       // TODO: | block | ATKEYWORD rep(S)
-			     )
-  def any: Parser[Any] = ( pIDENT  // TODO IDENT | NUMBER ...
-	   )
+  def value: Parser[Any] = rep1( any | block | pATKEYWORD )
+  def any: Parser[Any] = (pIDENT
+			  | pPERCENTAGE | pDIMENSION | pNUMBER
+			  | pSTRING | pURI | pHASH | pUNICODE_RANGE
+			  | INCLUDES | DASHMATCH | ":"
+			  | (pFUNCTION ~ rep(any) <~ ")" )
+			  | ("(" ~ rep(any) <~")")
+			  | ("[" ~ rep(any) <~"]")
+                          | pDELIM  )
 }
 
 class CSSParser extends CSSCore {
