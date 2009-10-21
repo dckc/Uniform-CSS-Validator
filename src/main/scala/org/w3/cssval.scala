@@ -81,7 +81,11 @@ class CSSLex extends RegexParsers with CSSMacros {
 
 
 
-  /* <Yves> Dan, I know you are using the general parsing rules instead of the versionned grammar, however if you use the 'url' production there, it has a bug (see http://lists.w3.org/Archives/Public/www-style/2009Oct/0206.html) */
+  /* <Yves> Dan, I know you are using the general parsing rules
+   * instead of the versionned grammar, however if you use the 'url'
+   * production there, it has a bug (see
+   * http://lists.w3.org/Archives/Public/www-style/2009Oct/0206.html)
+   * */
 			// extra ()s to bind | to the right level
   val pURI = tok("""(url\({w}{string}{w}\))""" +
 		"""|(url\({w}([!#$%&*-~]|{nonascii}|{escape})*{w}\))""")
@@ -193,7 +197,28 @@ trait RegexMacros {
 }
 
 trait CSSMacros extends RegexMacros {
-  /* TODO: build this map from macro_table below */
+/*
+Macro table from
+ http://www.w3.org/TR/CSS2/syndata.html
+
+ident 	[-]?{nmstart}{nmchar}*
+name 	{nmchar}+
+nmstart 	[_a-z]|{nonascii}|{escape}
+nonascii	[^\0-\177]
+unicode 	\\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?
+escape 	{unicode}|\\[^\n\r\f0-9a-f]
+nmchar 	[_a-z0-9-]|{nonascii}|{escape}
+num 	[0-9]+|[0-9]*\.[0-9]+
+string 	{string1}|{string2}
+string1 	\"([^\n\r\f\\"]|\\{nl}|{escape})*\"
+string2 	\'([^\n\r\f\\']|\\{nl}|{escape})*\'
+invalid 	{invalid1}|{invalid2}
+invalid1	\"([^\n\r\f\\"]|\\{nl}|{escape})*
+invalid2	\'([^\n\r\f\\']|\\{nl}|{escape})*
+nl 	\n|\r\n|\r|\f
+w 	[ \t\r\n\f]*
+*/
+
   override val map: Map[String, String] = Map(
     "ident" -> "[-]?{nmstart}{nmchar}*",
     "name" -> 	"{nmchar}+",
@@ -227,26 +252,6 @@ trait CSSMacros extends RegexMacros {
     "w_1" -> """[ \t\r\n\f]""",
     "comment" -> """/\*[^*]*\*+([^/*][^*]*\*+)*/"""
     )
-
-  val macro_table = """
-ident 	[-]?{nmstart}{nmchar}*
-name 	{nmchar}+
-nmstart 	[_a-z]|{nonascii}|{escape}
-nonascii	[^\0-\177]
-unicode 	\\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?
-escape 	{unicode}|\\[^\n\r\f0-9a-f]
-nmchar 	[_a-z0-9-]|{nonascii}|{escape}
-num 	[0-9]+|[0-9]*\.[0-9]+
-string 	{string1}|{string2}
-string1 	\"([^\n\r\f\\"]|\\{nl}|{escape})*\"
-string2 	\'([^\n\r\f\\']|\\{nl}|{escape})*\'
-invalid 	{invalid1}|{invalid2}
-invalid1	\"([^\n\r\f\\"]|\\{nl}|{escape})*
-invalid2	\'([^\n\r\f\\']|\\{nl}|{escape})*
-nl 	\n|\r\n|\r|\f
-w 	[ \t\r\n\f]*
-""";
-
 }
 
 class CSSCore extends CSSLex {
