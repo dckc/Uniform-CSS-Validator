@@ -65,6 +65,13 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
     // which doesn't work with sbt yet.
 
     ignore("should use the longest-matching rule") { }
+    it("should parse 1.2 as one number rather than 1 and .2") {
+      val l = new CSSTokens;
+
+      (l.parseAll(l.tokens, "1 1.2").get
+       should equal (List(NUMBER(1.0), NUMBER(1.2))) )
+    }
+
     ignore("lots more DELIM testing") { }
 
     it("should skip comments as well as whitespace per 4.1.1 Tokenization") {
@@ -138,13 +145,6 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
     }
 
 
-    it("should handle numbers") {
-      val l = new CSSTokens;
-
-      (l.parseAll(l.tokens, "1 1.2").get
-       should equal (List(NUMBER(1.0), NUMBER(1.2))) )
-    }
-
     it("should split the input into tokens") {
       (l.parseAll(l.tokens, "blockquote { text-align: right }").get
        should equal (List(IDENT("blockquote"),
@@ -171,24 +171,48 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
 			  DIMENSION(12.0, "pt"),
 			  DIMENSION(12.5, "pt") )) )
 
-      (l.parseAll(l.tokens, """{ causta: "}" + ({7} * '\'') }""").get
-       should equal (List("{", IDENT("causta"), ":",
-			  STRING("}"), DELIM("+"),
-			  "(", "{", NUMBER(7.0), "}",
-			  DELIM("*"), STRING("'"), ")", "}")) )
     }
 
+    it("should tokenize an example block from 4.1.6") {
+      (l.parseAll(l.tokens, """{ causta: "}" + ({7} * '\'') }""").get
+      should equal (List("{", IDENT("causta"), ":",
+			 STRING("}"), DELIM("+"),
+			 "(", "{", NUMBER(7.0), "}",
+			 DELIM("*"), STRING("'"), ")", "}")) )
+    }
+
+    it("should tokenize 1st example from 4.1.7 Rule sets...") {
+      (l.parseAll(l.tokens, """
+		    h1, h2 {color: green }
+		    h3, h4 & h5 {color: red }
+		    h6 {color: black }
+		    """).get
+       should equal (List(IDENT("h1"), DELIM(","), IDENT("h2"),
+			  "{", IDENT("color"), ":", IDENT("green"), "}",
+			  IDENT("h3"), DELIM(","),
+			  IDENT("h4"), DELIM("&"), IDENT("h5"),
+			  "{", IDENT("color"), ":", IDENT("red"), "}",
+			  IDENT("h6"),
+			  "{", IDENT("color"), ":", IDENT("black"), "}"))
+      )
+    }
   }
 
   describe("CSS Core") {
     val css = new CSSCore;
 
+    /* Using toString below seemed like a kludge, but I couldn't
+     figure out how to get the right ~ class visible. It turns out to
+     be possible, but it uses some deep scala magic. Better to make
+     the parser return more semantically appropriate case classes. */
+    it("should parse a trivial example") {
+      (css.parseAll(css.stylesheet, "e { }").get
+       should equal (List(new css.~(Some(List(IDENT("e"))), List()))) )
+    }
+
     ignore("CSS 2.1 user agents must ignore any '@import' rule that occurs inside a block or after any non-ignored statement other than an @charset or an @import rule. ") { }
 
     it("should do example 1 from 4.1.5 At-rules") {
-      // Using toString seems like a kludge,
-      // but I can't figure out how to get the right
-      // ~ class visible.
       (css.parseAll(css.stylesheet, """
 		    @import "subs.css";
 		    h1 { color: blue }
@@ -238,6 +262,16 @@ class CSSSyntaxSpec extends Spec with ShouldMatchers {
 
 { causta: "}" + ({7} * '\'') }
                  ^""")
+      )
+    }
+
+    it("should parse 1st example from 4.1.7 Rule sets...") {
+      (css.parseAll(css.stylesheet, """
+		    h1, h2 {color: green }
+		    h3, h4 & h5 {color: red }
+		    h6 {color: black }
+		    """).toString
+       should equal ("[5.7] parsed: List((Some(List(IDENT(h1), DELIM(,), IDENT(h2)))~List((IDENT(color)~List(IDENT(green))))), (Some(List(IDENT(h3), DELIM(,), IDENT(h4), DELIM(&), IDENT(h5)))~List((IDENT(color)~List(IDENT(red))))), (Some(List(IDENT(h6)))~List((IDENT(color)~List(IDENT(black))))))")
       )
     }
 
