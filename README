@@ -142,6 +142,10 @@ repository, whose original revision is 0:4ac7bd6d32f2.
 __ http://bitbucket.org/
 __ http://bitbucket.org/DanC/cssval/
 
+*hmm... only a handful of commits in the bitbucket world in the
+last week. Looked at moving to google code hosting... found
+some interesting CSS parsing projects there.*
+
 Open Source Software License
 ----------------------------
 
@@ -156,9 +160,11 @@ __ http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
 
 Share and enjoy.
 
-See also: Open Source Initiative certification__.
+This license has an Open Source Initiative certification__
+and is a `GPL-Compatible Free Software License`__.
 
 __ http://www.opensource.org/licenses/W3C.php
+__ http://www.fsf.org/licensing/licenses/index_html#GPLCompatibleLicenses
 
 Colophon
 --------
