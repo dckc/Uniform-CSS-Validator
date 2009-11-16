@@ -24,7 +24,7 @@ all tests pass::
 
  cssval$ sbt test
  ...
- [info] Run: 6, Passed: 6, Errors: 0, Failed: 0
+ [info] Run: 26, Passed: 26, Errors: 0, Failed: 0
  ...
 
 .. contents::
@@ -88,8 +88,8 @@ The directory layout of this project follows `sbt/maven conventions`__::
 __ http://code.google.com/p/simple-build-tool/wiki/Setup
 
 
-I haven't mastered `library management`__; I just copied .jar files
-into some ``lib`` directories until things started working.
+Using `library management`__ is in progress, thanks to contributions
+from Alexandre Bertails.
 
 __ http://code.google.com/p/simple-build-tool/wiki/LibraryManagement
 
@@ -133,18 +133,36 @@ glitches). My set-up is pretty rough; some notes::
  commit  000e748597d9b73e2da026029afc4ca9248aa936
 
 
-Version Control
----------------
+Source code and Version Control
+-------------------------------
 
-Project history is available on bitbucket__ in a cssval__ mercurial/hg
-repository, whose original revision is 0:4ac7bd6d32f2.
+To access the source code and project history using git__::
+
+  $ git clone git://dvcs.w3.org/cssval
+
+__ http://git-scm.com/
+
+Or you can use mercurial with the `Hg-Git plugin`__::
+
+  $ hg clone git://dvcs.w3.org/cssval
+
+__ http://hg-git.github.com/
+
+This project started Oct 11 2009, with mercurial revision
+0:4ac7bd6d32f2, aka git commit
+c6cdd1c783f30989c94b00844b1a739e88857366.
+
+Thanks to bitbucket__ for hosting the project in early stages; the
+cssval__ repository there may or may not be maintained.
 
 __ http://bitbucket.org/
 __ http://bitbucket.org/DanC/cssval/
 
-*hmm... only a handful of commits in the bitbucket world in the
-last week. Looked at moving to google code hosting... found
-some interesting CSS parsing projects there.*
+Likewise, an experimental github mirror, Uniform-CSS-Validator__,
+may or may not be maintained.
+
+__ http://github.com/dckc/Uniform-CSS-Validator
+
 
 Open Source Software License
 ----------------------------
@@ -166,9 +184,7 @@ and is a `GPL-Compatible Free Software License`__.
 __ http://www.opensource.org/licenses/W3C.php
 __ http://www.fsf.org/licensing/licenses/index_html#GPLCompatibleLicenses
 
-Colophon
---------
-
-This document is written using reStructuredText__ conventions.
-
-__ http://docutils.sourceforge.net/rst.html
+.. Colophon:
+.. This document is written using reStructuredText conventions.
+.. see Makefile for conversion to README.html .
+.. see http://docutils.sourceforge.net/rst.html for more on reStructuredText.

@@ -308,25 +308,24 @@ all tests pass:</p>
 <pre class="literal-block">
 cssval$ sbt test
 ...
-[info] Run: 6, Passed: 6, Errors: 0, Failed: 0
+[info] Run: 26, Passed: 26, Errors: 0, Failed: 0
 ...
 </pre>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><a class="reference internal" href="#scala-development" id="id18">Scala development</a><ul>
-<li><a class="reference internal" href="#simple-build-tool-sbt" id="id19">Simple Build Tool (sbt)</a></li>
-<li><a class="reference internal" href="#scalatest" id="id20">ScalaTest</a></li>
-<li><a class="reference internal" href="#emacs-and-scala" id="id21">Emacs and Scala</a></li>
+<li><a class="reference internal" href="#scala-development" id="id21">Scala development</a><ul>
+<li><a class="reference internal" href="#simple-build-tool-sbt" id="id22">Simple Build Tool (sbt)</a></li>
+<li><a class="reference internal" href="#scalatest" id="id23">ScalaTest</a></li>
+<li><a class="reference internal" href="#emacs-and-scala" id="id24">Emacs and Scala</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#version-control" id="id22">Version Control</a></li>
-<li><a class="reference internal" href="#open-source-software-license" id="id23">Open Source Software License</a></li>
-<li><a class="reference internal" href="#colophon" id="id24">Colophon</a></li>
+<li><a class="reference internal" href="#source-code-and-version-control" id="id25">Source code and Version Control</a></li>
+<li><a class="reference internal" href="#open-source-software-license" id="id26">Open Source Software License</a></li>
 </ul>
 </div>
 <div class="section" id="scala-development">
-<h1><a class="toc-backref" href="#id18">Scala development</a></h1>
+<h1><a class="toc-backref" href="#id21">Scala development</a></h1>
 <blockquote>
 <p>Scala is a general purpose programming language designed to
 express common programming patterns in a concise, elegant, and
@@ -343,7 +342,7 @@ downloaded is:</p>
 <p>Once you download and unpack that, you should be able to see that
 interpreter and compiler work as per <a class="reference external" href="http://www.scala-lang.org/node/166">Getting Started with Scala</a>.</p>
 <div class="section" id="simple-build-tool-sbt">
-<h2><a class="toc-backref" href="#id19">Simple Build Tool (sbt)</a></h2>
+<h2><a class="toc-backref" href="#id22">Simple Build Tool (sbt)</a></h2>
 <p>The Scala tribe seems to use <a class="reference external" href="http://code.google.com/p/simple-build-tool/">sbt</a> in place of make or ant.</p>
 <p>Audit trail:</p>
 <pre class="literal-block">
@@ -367,11 +366,11 @@ src/
     java/
        &lt;test Java sources&gt;
 </pre>
-<p>I haven't mastered <a class="reference external" href="http://code.google.com/p/simple-build-tool/wiki/LibraryManagement">library management</a>; I just copied .jar files
-into some <tt class="docutils literal"><span class="pre">lib</span></tt> directories until things started working.</p>
+<p>Using <a class="reference external" href="http://code.google.com/p/simple-build-tool/wiki/LibraryManagement">library management</a> is in progress, thanks to contributions
+from Alexandre Bertails.</p>
 </div>
 <div class="section" id="scalatest">
-<h2><a class="toc-backref" href="#id20">ScalaTest</a></h2>
+<h2><a class="toc-backref" href="#id23">ScalaTest</a></h2>
 <p><a class="reference external" href="http://www.scalatest.org/download">ScalaTest</a> is a leading test framework for Scala.</p>
 <p>Audit trail:</p>
 <pre class="literal-block">
@@ -384,7 +383,7 @@ For a work-around (that I have not yet tried), see:
 <a class="reference external" href="http://groups.google.com/group/simple-build-tool/browse_thread/thread/fb967ee255dff7f9/8efd9870026481cb?lnk=gst&amp;q=ScalaTest+1.0#8efd9870026481cb">ScalaTest 1.0</a>.</p>
 </div>
 <div class="section" id="emacs-and-scala">
-<h2><a class="toc-backref" href="#id21">Emacs and Scala</a></h2>
+<h2><a class="toc-backref" href="#id24">Emacs and Scala</a></h2>
 <p>With <tt class="docutils literal"><span class="pre">scala-mode</span></tt>, emacs helps with indentation and syntax coloring.
 With <tt class="docutils literal"><span class="pre">sbt.el</span></tt>, emacs can navigate compiler errors (with some
 glitches). My set-up is pretty rough; some notes:</p>
@@ -402,13 +401,26 @@ commit  000e748597d9b73e2da026029afc4ca9248aa936
 </pre>
 </div>
 </div>
-<div class="section" id="version-control">
-<h1><a class="toc-backref" href="#id22">Version Control</a></h1>
-<p>Project history is available on <a class="reference external" href="http://bitbucket.org/">bitbucket</a> in a <a class="reference external" href="http://bitbucket.org/DanC/cssval/">cssval</a> mercurial/hg
-repository, whose original revision is 0:4ac7bd6d32f2.</p>
+<div class="section" id="source-code-and-version-control">
+<h1><a class="toc-backref" href="#id25">Source code and Version Control</a></h1>
+<p>To access the source code and project history using <a class="reference external" href="http://git-scm.com/">git</a>:</p>
+<pre class="literal-block">
+$ git clone git://dvcs.w3.org/cssval
+</pre>
+<p>Or you can use mercurial with the <a class="reference external" href="http://hg-git.github.com/">Hg-Git plugin</a>:</p>
+<pre class="literal-block">
+$ hg clone git://dvcs.w3.org/cssval
+</pre>
+<p>This project started Oct 11 2009, with mercurial revision
+0:4ac7bd6d32f2, aka git commit
+c6cdd1c783f30989c94b00844b1a739e88857366.</p>
+<p>Thanks to <a class="reference external" href="http://bitbucket.org/">bitbucket</a> for hosting the project in early stages; the
+<a class="reference external" href="http://bitbucket.org/DanC/cssval/">cssval</a> repository there may or may not be maintained.</p>
+<p>Likewise, an experimental github mirror, <a class="reference external" href="http://github.com/dckc/Uniform-CSS-Validator">Uniform-CSS-Validator</a>,
+may or may not be maintained.</p>
 </div>
 <div class="section" id="open-source-software-license">
-<h1><a class="toc-backref" href="#id23">Open Source Software License</a></h1>
+<h1><a class="toc-backref" href="#id26">Open Source Software License</a></h1>
 <p>Copyright (c) 2009 World Wide Web Consortium, (Massachusetts
 Institute of Technology, European Research Consortium for Informatics
 and Mathematics, Keio University). All Rights Reserved. This work is
@@ -416,11 +428,12 @@ distributed under the <a class="reference external" href="http://www.w3.org/Cons
 will be useful, but WITHOUT ANY WARRANTY; without even the implied
 warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.</p>
 <p>Share and enjoy.</p>
-<p>See also: Open Source Initiative <a class="reference external" href="http://www.opensource.org/licenses/W3C.php">certification</a>.</p>
-</div>
-<div class="section" id="colophon">
-<h1><a class="toc-backref" href="#id24">Colophon</a></h1>
-<p>This document is written using <a class="reference external" href="http://docutils.sourceforge.net/rst.html">reStructuredText</a> conventions.</p>
+<p>This license has an Open Source Initiative <a class="reference external" href="http://www.opensource.org/licenses/W3C.php">certification</a>
+and is a <a class="reference external" href="http://www.fsf.org/licensing/licenses/index_html#GPLCompatibleLicenses">GPL-Compatible Free Software License</a>.</p>
+<!-- Colophon: -->
+<!-- This document is written using reStructuredText conventions. -->
+<!-- see Makefile for conversion to README.html . -->
+<!-- see http://docutils.sourceforge.net/rst.html for more on reStructuredText. -->
 </div>
 </div>
 </body>
